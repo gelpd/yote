@@ -23,11 +23,9 @@ while training:
     experiment.emit({"loss": 0.3, "mse": "21"}, stage="train")
 
 ```
-To read metrics and logs from your machine learning experiment, see the following example:
+TODO: To read metrics and logs from your machine learning experiment, see the following example:
 ```
-from yote import Experiment
 
-experiment = Experiment().from_json()
 ```
 
 ### Configuration

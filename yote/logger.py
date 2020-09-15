@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 import orjson
 
@@ -6,12 +7,12 @@ import orjson
 class Logger:
     def __init__(
         self,
-        path: str,
         name: str,
+        file_handler: logging.FileHandler,
+        stream_handler: logging.StreamHandler,
         print_every: int = 1,
-        verbose: bool = True
+        verbose: bool = True,
     ):
-        self.path = path
         self.name = name
         self.print_every = print_every
         self.verbose = verbose
@@ -19,15 +20,8 @@ class Logger:
         self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.DEBUG)
 
-        formatter = logging.Formatter("%(message)s")
-
-        self.ch = logging.StreamHandler()
-        self.ch.setLevel(logging.DEBUG)
-        self.ch.setFormatter(formatter)
-
-        self.fh = logging.FileHandler(path)
-        self.fh.setLevel(logging.DEBUG)
-        self.fh.setFormatter(formatter)
+        self.ch = stream_handler
+        self.fh = file_handler
 
         self.logger.propagate = False
         self.i = 0
@@ -46,9 +40,8 @@ class Logger:
             (),
             None,
         )
-        if self.verbose:
-            if self.i % self.print_every == 0:
-                self.ch.emit(record)
+        if self.verbose and self.i % self.print_every == 0:
+            self.ch.emit(record)
 
         self.fh.emit(record)
         self.i += 1

@@ -35,7 +35,6 @@ TODO: To read metrics and logs from your machine learning experiment, see the fo
 ### Contributing
 
 ### TODO
- - cloud storage backed
  - prometheus exporter
  - cli explorer
  

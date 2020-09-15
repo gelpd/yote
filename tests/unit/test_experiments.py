@@ -76,3 +76,11 @@ class TestExperiment(unittest.TestCase):
             [experiment.emit(line) for line in lines]
             read_lines = [orjson.loads(x) for x in get_output(experiment)]
             self.assertEqual(read_lines, [])
+
+    def test_experiment_from_id(self):
+        with tempfile.TemporaryDirectory() as td:
+            meta = {"asdf": "test"}
+            experiment = Experiment(data_path=td, verbose=False, meta=meta)
+            _id = experiment._id
+            experiment = Experiment.from_id(_id, data_path=td)
+            self.assertEqual(experiment.meta, meta)

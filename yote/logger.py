@@ -53,8 +53,5 @@ class Logger:
             self.ch.emit(record)
 
         self.fh.emit(record)
-
-        if self.prometheus_metrics:
-            self.prometheus_observe(data)
-
+        self.prometheus_observe(data)
         self.i += 1

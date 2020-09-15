@@ -1,11 +1,10 @@
 """Saves data corresponding to experiments in a folder."""
 
-from os import PathLike
 import logging
+from os import PathLike
 import uuid
-from pathlib import Path
-from collections import namedtuple
 from typing import Optional
+from pathlib import Path
 
 import orjson
 
@@ -24,24 +23,26 @@ class Experiment(Logger):
         stream_handler: Optional[logging.StreamHandler] = None,
         formatter: Optional[logging.Formatter] = None,
     ):
-        self._id = _id or str(uuid.uuid4())
-        self.data_path = Path(data_path)
-        self.formatter = formatter or logging.Formatter("%(message)s")
+        self._id: str = _id or str(uuid.uuid4())
+        self.data_path: PathLike = Path(data_path)
+        self.formatter: logging.Formatter = formatter or logging.Formatter(
+            "%(message)s"
+        )
         (self.data_path / Path(self._id)).mkdir(parents=True, exist_ok=True)
 
         super().__init__(
             self._id,
             file_handler
             or self._make_file_handler(
-                self.data_path / Path(self._id) / Path("metrics.log"), formatter
+                self.data_path / Path(self._id) / Path("metrics.log"), self.formatter
             ),
-            stream_handler or self._make_stream_handler(formatter),
+            stream_handler or self._make_stream_handler(self.formatter),
             print_every=print_every,
             verbose=verbose,
         )
 
         if meta:
-            meta_path = self.data_path / Path(self._id) / Path("meta.json")
+            meta_path: PathLike = self.data_path / Path(self._id) / Path("meta.json")
             with open(meta_path, "wb") as f:
                 f.write(orjson.dumps(meta))
 
@@ -58,15 +59,17 @@ class Experiment(Logger):
         )
 
     @staticmethod
-    def _make_file_handler(path: PathLike, formatter):
-        fh = logging.FileHandler(path)
+    def _make_file_handler(
+        path: PathLike, formatter: logging.Formatter
+    ) -> logging.FileHandler:
+        fh: logging.FileHandler = logging.FileHandler(path)
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(formatter)
         return fh
 
     @staticmethod
-    def _make_stream_handler(formatter):
-        ch = logging.StreamHandler()
+    def _make_stream_handler(formatter: logging.Formatter) -> logging.StreamHandler:
+        ch: logging.StreamHandler = logging.StreamHandler()
         ch.setLevel(logging.DEBUG)
         ch.setFormatter(formatter)
         return ch

@@ -1,3 +1,5 @@
+"""Abstracts away logging, adds small functionality like print every."""
+
 import logging
 from typing import Optional
 
@@ -12,12 +14,14 @@ class Logger:
         stream_handler: logging.StreamHandler,
         print_every: int = 1,
         verbose: bool = True,
+        prometheus_metrics: dict = {},
     ):
         self.name = name
         self.print_every = print_every
         self.verbose = verbose
+        self.prometheus_metrics = prometheus_metrics
 
-        self.logger = logging.getLogger(name)
+        self.logger: logging.Logger = logging.getLogger(name)
         self.logger.setLevel(logging.DEBUG)
 
         self.ch = stream_handler
@@ -30,8 +34,13 @@ class Logger:
         self.ch.close()
         self.fh.close()
 
+    def prometheus_observe(self, data: dict):
+        for key in self.prometheus_metrics.keys():
+            if data.get(key):
+                self.prometheus_metrics[key].observe(data[key])
+
     def emit(self, data: dict) -> None:
-        record = logging.LogRecord(
+        record: logging.LogRecord = logging.LogRecord(
             self.name,
             logging.INFO,
             self.name,
@@ -44,4 +53,8 @@ class Logger:
             self.ch.emit(record)
 
         self.fh.emit(record)
+
+        if self.prometheus_metrics:
+            self.prometheus_observe(data)
+
         self.i += 1

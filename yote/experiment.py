@@ -8,10 +8,8 @@ from pathlib import Path
 
 import orjson
 
-from yote.logger import Logger
 
-
-class Experiment(Logger):
+class Experiment:
     def __init__(
         self,
         _id: Optional[str] = None,
@@ -22,31 +20,64 @@ class Experiment(Logger):
         file_handler: Optional[logging.FileHandler] = None,
         stream_handler: Optional[logging.StreamHandler] = None,
         formatter: Optional[logging.Formatter] = None,
-        prometheus_metrics: Optional[dict] = None
+        prometheus_metrics: Optional[dict] = None,
     ):
         self._id: str = _id or str(uuid.uuid4())
         self.data_path: PathLike = Path(data_path)
         self.formatter: logging.Formatter = formatter or logging.Formatter(
             "%(message)s"
         )
+
+        self.verbose: bool = verbose
+        self.print_every: int = print_every
+        self.prometheus_metrics: dict = prometheus_metrics or {}
         (self.data_path / Path(self._id)).mkdir(parents=True, exist_ok=True)
 
-        super().__init__(
-            self._id,
-            file_handler
-            or self._make_file_handler(
-                self.data_path / Path(self._id) / Path("metrics.log"), self.formatter
-            ),
-            stream_handler or self._make_stream_handler(self.formatter),
-            print_every=print_every,
-            verbose=verbose,
-            prometheus_metrics=prometheus_metrics
+        self.logger: logging.Logger = logging.getLogger(self._id)
+        self.logger.setLevel(logging.DEBUG)
+
+        self.ch: logging.StreamHandler = stream_handler or self._make_stream_handler(
+            self.formatter
         )
+        self.fh: logging.FileHandler = file_handler or self._make_file_handler(
+            self.data_path / Path(self._id) / Path("metrics.log"), self.formatter
+        )
+
+        self.logger.propagate = False
 
         if meta:
             meta_path: PathLike = self.data_path / Path(self._id) / Path("meta.json")
             with open(meta_path, "wb") as f:
                 f.write(orjson.dumps(meta))
+
+        self.log_idx = 0
+
+    def __del__(self):
+        self.ch.close()
+        self.fh.close()
+
+    def prometheus_observe(self, data: dict) -> None:
+        for key in self.prometheus_metrics.keys():
+            if data.get(key):
+                self.prometheus_metrics[key].observe(data[key])
+
+    def emit(self, data: dict) -> None:
+        record: logging.LogRecord = logging.LogRecord(
+            self._id,
+            logging.INFO,
+            self._id,
+            0,
+            orjson.dumps(data).decode("utf-8"),
+            (),
+            None,
+        )
+
+        if self.verbose and self.log_idx % self.print_every == 0:
+            self.ch.emit(record)
+
+        self.fh.emit(record)
+        self.prometheus_observe(data)
+        self.log_idx += 1
 
     @classmethod
     def from_id(

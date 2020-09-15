@@ -22,6 +22,7 @@ class Experiment(Logger):
         file_handler: Optional[logging.FileHandler] = None,
         stream_handler: Optional[logging.StreamHandler] = None,
         formatter: Optional[logging.Formatter] = None,
+        prometheus_metrics: Optional[dict] = None
     ):
         self._id: str = _id or str(uuid.uuid4())
         self.data_path: PathLike = Path(data_path)
@@ -39,6 +40,7 @@ class Experiment(Logger):
             stream_handler or self._make_stream_handler(self.formatter),
             print_every=print_every,
             verbose=verbose,
+            prometheus_metrics=prometheus_metrics
         )
 
         if meta:

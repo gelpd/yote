@@ -14,12 +14,12 @@ class Logger:
         stream_handler: logging.StreamHandler,
         print_every: int = 1,
         verbose: bool = True,
-        prometheus_metrics: dict = {},
+        prometheus_metrics: Optional[dict] = None,
     ):
         self.name = name
         self.print_every = print_every
         self.verbose = verbose
-        self.prometheus_metrics = prometheus_metrics
+        self.prometheus_metrics: dict = prometheus_metrics or {}
 
         self.logger: logging.Logger = logging.getLogger(name)
         self.logger.setLevel(logging.DEBUG)

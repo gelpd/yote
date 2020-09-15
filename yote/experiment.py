@@ -11,10 +11,6 @@ import orjson
 
 from yote.logger import Logger
 
-Handlers = namedtuple(
-    'Handlers', ['file_handler', 'stream_handler']
-)
-
 
 class Experiment(Logger):
     def __init__(
@@ -24,27 +20,28 @@ class Experiment(Logger):
         meta: Optional[dict] = None,
         print_every: int = 1,
         verbose: bool = True,
+        file_handler: Optional[logging.FileHandler] = None,
+        stream_handler: Optional[logging.StreamHandler] = None,
+        formatter: Optional[logging.Formatter] = None,
     ):
         self._id = _id or str(uuid.uuid4())
         self.data_path = Path(data_path)
+        self.formatter = formatter or logging.Formatter("%(message)s")
         (self.data_path / Path(self._id)).mkdir(parents=True, exist_ok=True)
-
-        handlers = self._make_log_handlers(
-            self.data_path / Path(self._id) / Path("metrics.log")
-        )
 
         super().__init__(
             self._id,
-            handlers.file_handler,
-            handlers.stream_handler,
+            file_handler
+            or self._make_file_handler(
+                self.data_path / Path(self._id) / Path("metrics.log"), formatter
+            ),
+            stream_handler or self._make_stream_handler(formatter),
             print_every=print_every,
-            verbose=verbose
+            verbose=verbose,
         )
 
         if meta:
-            meta_path = (
-                self.data_path / Path(self._id) / Path("meta.json")
-            )
+            meta_path = self.data_path / Path(self._id) / Path("meta.json")
             with open(meta_path, "wb") as f:
                 f.write(orjson.dumps(meta))
 
@@ -54,24 +51,22 @@ class Experiment(Logger):
         _id: str,
         data_path: str = "yote-out",
         print_every: int = 1,
-        verbose: bool = True
+        verbose: bool = True,
     ):
         return Experiment(
-            _id=_id,
-            data_path=data_path,
-            print_every=print_every,
-            verbose=verbose
+            _id=_id, data_path=data_path, print_every=print_every, verbose=verbose
         )
 
     @staticmethod
-    def _make_log_handlers(path: PathLike):
-        formatter = logging.Formatter("%(message)s")
-
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
-        ch.setFormatter(formatter)
-
+    def _make_file_handler(path: PathLike, formatter):
         fh = logging.FileHandler(path)
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(formatter)
-        return Handlers(fh, ch)
+        return fh
+
+    @staticmethod
+    def _make_stream_handler(formatter):
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.DEBUG)
+        ch.setFormatter(formatter)
+        return ch

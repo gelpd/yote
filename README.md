@@ -20,7 +20,7 @@ experiment = Experiment()
 
 while training:
     # doing work...
-    experiment.emit({"loss": 0.3, "mse": 21}, stage="train")
+    experiment.emit({"loss": 0.3, "mse": 21})
 
 ```
 

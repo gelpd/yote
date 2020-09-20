@@ -19,18 +19,10 @@ def get_output(experiment):
 
 
 class TestExperiment(unittest.TestCase):
-
     def test_experiment_folder_created(self):
         with tempfile.TemporaryDirectory() as td:
             experiment = Experiment(data_path=td)
-            self.assertTrue(
-                os.path.isdir(
-                    os.path.join(
-                        td,
-                        experiment._id
-                    )
-                )
-            )
+            self.assertTrue(os.path.isdir(os.path.join(td, experiment._id)))
 
     def test_experiment_meta_saves(self):
         with tempfile.TemporaryDirectory() as td:

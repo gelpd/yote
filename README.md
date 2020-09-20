@@ -12,10 +12,11 @@ Yote is built to integrate seamlessly with any code you write in python. It oper
 locally by default, but gives you the flexibility to integrate metrics with services like Prometheus. 
 
 ### Usage
-To use yote in your machine learning code, see the following example:
+To use yote in your machine learning code to write metrics and logs, see the following example:
 
 ```
 from yote import Experiment
+
 experiment = Experiment()
 
 while training:
@@ -24,12 +25,13 @@ while training:
 
 ```
 
-TODO: To read metrics and logs from your machine learning experiment, see the following example:
+You can 'load' up a previous experiment like so:
 ```
+from yote import Experiment
+
+experiment = Experiment.from_id("krabby-patty")
 
 ```
-
-### Configuration
 
 ### Implementation
 
